@@ -56,7 +56,7 @@ export class TodoTreeItem extends TreeItem {
   constructor(todo: Todo, parent?: TodoTreeItem) {
     super(todo.title, todo.collapsibleState);
     this.id = todo.id;
-    this.checkboxState = todo.status;
+    this.checkboxState = todo.checkboxState;
     this.parent = parent;
     this.children = todo.children?.map((child) => new TodoTreeItem(child, this));
     this.tooltip = new MarkdownString(todo.title);

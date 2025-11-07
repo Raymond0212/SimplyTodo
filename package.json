@@ -15,22 +15,32 @@
     "commands": [
       {
         "command": "simplytodo.refreshList",
-        "title": "Refresh",
+        "title": "Todo: Refresh Todo List",
         "icon": "$(extensions-refresh)"
       },
       {
         "command": "simplytodo.refreshDetail",
-        "title": "Refresh",
+        "title": "Todo: Refresh Todo Detail",
         "icon": "$(extensions-refresh)"
       },
       {
         "command": "simplytodo.createTodo",
-        "title": "Todo: Create a sub Todo",
+        "title": "Todo: Create a Todo",
+        "icon": "$(add)"
+      },
+      {
+        "command": "simplytodo.createRootTodo",
+        "title": "Todo: Create a Todo",
         "icon": "$(add)"
       },
       {
         "command": "simplytodo.deleteTodo",
         "title": "Todo: Delete Todo",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "simplytodo.deleteCheckedTodo",
+        "title": "Todo: Delete All Checked Todo",
         "icon": "$(trash)"
       },
       {
@@ -76,7 +86,30 @@
           "when": "false"
         },
         {
-          "command": "simplytodo.createTodo"
+          "command": "simplytodo.createTodo",
+          "when": "false"
+        },
+        {
+          "command": "simplytodo.refreshList",
+          "when": "false"
+        },
+        {
+          "command": "simplytodo.refreshDetail",
+          "when": "false"
+        },
+        {
+          "command": "simplytodo.showTodoDetail",
+          "when": "false"
+        },
+        {
+          "command": "simplytodo.editItem",
+          "when": "false"
+        },
+        {
+          "command": "simplytodo.deleteCheckedTodo"
+        },
+        {
+          "command": "simplytodo.createRootTodo"
         }
       ],
       "view/title": [
@@ -87,8 +120,14 @@
           "when": "view == simplytodo.todoListView"
         },
         {
-          "command": "simplytodo.createTodo",
+          "command": "simplytodo.createRootTodo",
           "title": "Todo: Create a Todo",
+          "group": "navigation@1",
+          "when": "view == simplytodo.todoListView"
+        },
+        {
+          "command": "simplytodo.deleteCheckedTodo",
+          "title": "Todo: Delete All Checked Todo",
           "group": "navigation@1",
           "when": "view == simplytodo.todoListView"
         },

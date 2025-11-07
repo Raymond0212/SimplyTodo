@@ -1,7 +1,13 @@
-import { commands, ExtensionContext, window, TreeItemCollapsibleState } from "vscode";
+import {
+  commands,
+  ExtensionContext,
+  window,
+  TreeItemCollapsibleState,
+  TreeItemCheckboxState,
+} from "vscode";
 import { v4 as uuidv4 } from "uuid";
 import { TodoTreeDataProvider, TodoTreeItem } from "./providers/TodoTreeDataProvider";
-import { NewTodo, Todo } from "./types/Todo";
+import { NewTodo, Todo, todoIterator } from "./types/Todo";
 import { TodoDetailViewProvider } from "./providers/TodoDetaiViewProvider";
 
 function findtodoById(todos: Todo[], id: string): Todo | undefined {
@@ -43,6 +49,10 @@ function deleteTreetodo(todos: Todo[], todo: Todo): boolean {
   return false;
 }
 
+function deletedTodoCriteria(todo: Todo): boolean {
+  return todo.children && todo.checkboxState === TreeItemCheckboxState.Unchecked;
+}
+
 export function activate(context: ExtensionContext) {
   const SIMPLY_TODO_STORAGE_KEY = "simply-todo-todo-list";
   let todos: Todo[] = context.globalState.get(SIMPLY_TODO_STORAGE_KEY, []);
@@ -76,6 +86,21 @@ export function activate(context: ExtensionContext) {
     }
   });
 
+  treeView.onDidChangeCheckboxState((e) => {
+    e.items.forEach((item) => {
+      const todoTreeItem = item[0];
+      const checkboxState = item[1];
+      if (!todoTreeItem || !checkboxState) {
+        return;
+      }
+      const todo = findtodoById(todos, todoTreeItem.id);
+      if (todo && checkboxState !== undefined) {
+        todo.checkboxState = checkboxState;
+      }
+    });
+    context.globalState.update(SIMPLY_TODO_STORAGE_KEY, todos);
+  });
+
   const showTodoDetail = commands.registerCommand(
     "simplytodo.showTodoDetail",
     (todoItem: TodoTreeItem) => {
@@ -101,6 +126,10 @@ export function activate(context: ExtensionContext) {
         value: todoItem.label?.toString(),
       });
 
+      if (!newLabel) {
+        return;
+      }
+
       const todoToEdit = findtodoById(todos, todoItem.id);
       if (todoToEdit) {
         todoToEdit.title = newLabel || todoToEdit.title;
@@ -109,25 +138,35 @@ export function activate(context: ExtensionContext) {
     }
   );
 
-  // Command to create a new todo
-  const createTodo = commands.registerCommand(
-    "simplytodo.createTodo",
-    (parentTodo?: TodoTreeItem) => {
-      const id = uuidv4();
+  const createTodoFunction = async (parentTodo?: TodoTreeItem) => {
+    const id = uuidv4();
 
-      if (parentTodo === undefined) {
-        const newtodo = new NewTodo(id, todos);
-      } else {
-        const parent = findtodoById(todos, parentTodo.id);
-        const newtodo = new NewTodo(id, todos, parent);
-      }
+    const newLabel = await window.showInputBox({
+      value: "New Todo",
+    });
 
-      todoDataProvider.refresh(todos);
-      context.globalState.update(SIMPLY_TODO_STORAGE_KEY, todos);
-      console.log(context.globalState.get(SIMPLY_TODO_STORAGE_KEY, []));
-      console.log(todos);
+    if (!newLabel) {
+      return;
     }
+
+    if (parentTodo === undefined) {
+      const newtodo = new NewTodo(id, todos, undefined, newLabel);
+    } else {
+      const parent = findtodoById(todos, parentTodo.id);
+      const newtodo = new NewTodo(id, todos, parent, newLabel);
+    }
+
+    todoDataProvider.refresh(todos);
+    context.globalState.update(SIMPLY_TODO_STORAGE_KEY, todos);
+  };
+
+  // Command to create a root new todo
+  const createRootTodo = commands.registerCommand("simplytodo.createRootTodo", () =>
+    createTodoFunction(undefined)
   );
+
+  // Command to create a new todo
+  const createTodo = commands.registerCommand("simplytodo.createTodo", createTodoFunction);
 
   // Command to delete a given todo
   const deleteTodo = commands.registerCommand("simplytodo.deleteTodo", (node: TodoTreeItem) => {
@@ -148,7 +187,17 @@ export function activate(context: ExtensionContext) {
     }
   });
 
+  // Command to delete checked todo
+  const deleteCheckedTodo = commands.registerCommand("simplytodo.deleteCheckedTodo", () => {
+    todos = todoIterator(todos, deletedTodoCriteria, (todoList) =>
+      todoList.filter((todo) => todo.checkboxState !== TreeItemCheckboxState.Checked)
+    );
+    todoDataProvider.refresh(todos);
+    context.globalState.update(SIMPLY_TODO_STORAGE_KEY, todos);
+  });
+
   // List Commands
+  context.subscriptions.push(createRootTodo);
   context.subscriptions.push(createTodo);
   context.subscriptions.push(deleteTodo);
   context.subscriptions.push(refreshList);

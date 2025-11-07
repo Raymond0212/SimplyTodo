@@ -5,7 +5,7 @@ export interface Todo {
   title: string;
   tags?: string[];
   children: Todo[];
-  status: TreeItemCheckboxState;
+  checkboxState: TreeItemCheckboxState;
   collapsibleState: TreeItemCollapsibleState;
   parent?: string[];
 }
@@ -15,7 +15,7 @@ export class NewTodo implements Todo {
   title: string = "New todo";
   tags?: string[];
   children: Todo[] = [];
-  status: TreeItemCheckboxState = TreeItemCheckboxState.Unchecked;
+  checkboxState: TreeItemCheckboxState = TreeItemCheckboxState.Unchecked;
   collapsibleState: TreeItemCollapsibleState = TreeItemCollapsibleState.None;
   parent?: string[] = [];
 
@@ -37,4 +37,18 @@ export class NewTodo implements Todo {
       todos.push(this);
     }
   }
+}
+
+export function todoIterator(
+  todos: Todo[],
+  criteria: (todo: Todo) => boolean,
+  callback: (todos: Todo[]) => Todo[]
+): Todo[] {
+  todos = callback(todos);
+  todos.forEach((todo) => {
+    if (criteria(todo)) {
+      todo.children = todoIterator(todo.children, criteria, callback);
+    }
+  });
+  return todos;
 }
