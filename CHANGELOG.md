@@ -1,9 +1,9 @@
 # Change Log
 
-All notable changes to the "simplytodo" extension will be documented in this file.
-
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
-
-## [Unreleased]
+## [0.0.1] - 2024-06-15
 
 - Initial release
+
+## [0.0.2] - 2024-06-16
+
+- Update introduction page.
