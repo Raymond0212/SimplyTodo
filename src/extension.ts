@@ -1,122 +1,163 @@
-import {
-  commands,
-  ExtensionContext,
-  WebviewPanel,
-  window,
-  ViewColumn,
-  Uri,
-  TreeItemCheckboxState,
-} from "vscode";
+import { commands, ExtensionContext, window, TreeItemCollapsibleState } from "vscode";
 import { v4 as uuidv4 } from "uuid";
-import { TodoDataProvider } from "./providers/TodoDataProvider";
-import { getWebviewContent } from "./ui/getWebviewContent";
-import { NewTask, Task } from "./types/Task";
+import { TodoTreeDataProvider, TodoTreeItem } from "./providers/TodoTreeDataProvider";
+import { NewTodo, Todo } from "./types/Todo";
+import { TodoDetailViewProvider } from "./providers/TodoDetaiViewProvider";
+
+function findtodoById(todos: Todo[], id: string): Todo | undefined {
+  for (const todo of todos) {
+    if (todo.id === id) {
+      return todo;
+    }
+    if (todo.children) {
+      const found = findtodoById(todo.children, id);
+      if (found) {
+        return found;
+      }
+    }
+  }
+  return undefined;
+}
+
+function findParent(todos: Todo[], parentPath: string[]): Todo | undefined {
+  const currentId = parentPath[0];
+  for (const todo of todos) {
+    if (todo.id === currentId && parentPath.length <= 1) {
+      return todo;
+    } else if (todo.id === currentId && todo.children) {
+      return findParent(todo.children, parentPath.slice(1));
+    }
+  }
+  return undefined;
+}
+
+function deleteTreetodo(todos: Todo[], todo: Todo): boolean {
+  todos = findParent(todos, todo.parent ? todo.parent : [])?.children || todos;
+  const index = todos.findIndex((t) => t.id === todo.id);
+
+  if (index !== -1) {
+    todos.splice(index, 1);
+    return true;
+  }
+
+  return false;
+}
 
 export function activate(context: ExtensionContext) {
-  const TASKS_STORAGE_KEY = "simply-todo-task-list";
-  let tasks: Task[] = context.globalState.get(TASKS_STORAGE_KEY, []);
-  let panel: WebviewPanel | undefined = undefined;
+  const SIMPLY_TODO_STORAGE_KEY = "simply-todo-todo-list";
+  let todos: Todo[] = context.globalState.get(SIMPLY_TODO_STORAGE_KEY, []);
 
-  const todoDataProvider = new TodoDataProvider(tasks);
+  const todoDataProvider = new TodoTreeDataProvider(todos);
+  const todoDetailProvider = new TodoDetailViewProvider(context.extensionUri);
 
-  // Create a tree view to contain the list of todo tasks
+  // Create a tree view to contain the list of todo todos
   const treeView = window.createTreeView("simplytodo.todoListView", {
     treeDataProvider: todoDataProvider,
-    showCollapseAll: false,
+    showCollapseAll: true,
   });
 
-  // Command to render a webview-based task view
-  const openTask = commands.registerCommand("simplytodo.showTaskDetailView", () => {
-    const selectedTreeViewItem = treeView.selection[0];
-    if (!selectedTreeViewItem) {
-      return;
-    }
-    const matchingTask = tasks.find((task) => task.id === selectedTreeViewItem.id);
-    if (!matchingTask) {
-      window.showErrorMessage("No matching task found");
-      return;
-    }
+  context.subscriptions.push(
+    window.registerWebviewViewProvider("simplytodo.todoDetailView", todoDetailProvider)
+  );
 
-    // If no panel is open, create a new one and update the HTML
-    if (!panel) {
-      panel = window.createWebviewPanel("taskDetailView", matchingTask.title, ViewColumn.One, {
-        // Enable JavaScript in the webview
-        enableScripts: true,
-        // Restrict the webview to only load resources from the `out` directory
-        localResourceRoots: [Uri.joinPath(context.extensionUri, "out")],
-      });
+  treeView.onDidCollapseElement((e) => {
+    const todo = findtodoById(todos, e.element.id!);
+    if (todo) {
+      todo.collapsibleState = TreeItemCollapsibleState.Collapsed;
+      context.globalState.update(SIMPLY_TODO_STORAGE_KEY, todos);
     }
+  });
 
-    // If a panel is open, update the HTML with the selected item's content
-    panel.title = matchingTask.title;
-    panel.webview.html = getWebviewContent(panel.webview, context.extensionUri, matchingTask);
+  treeView.onDidExpandElement((e) => {
+    const todo = findtodoById(todos, e.element.id!);
+    if (todo) {
+      todo.collapsibleState = TreeItemCollapsibleState.Expanded;
+      context.globalState.update(SIMPLY_TODO_STORAGE_KEY, todos);
+    }
+  });
 
-    // If a panel is open and receives an update message, update the tasks array and the panel title/html
-    panel.webview.onDidReceiveMessage((message) => {
-      const command = message.command;
-      const task = message.task;
-      switch (command) {
-        case "updateTask":
-          const updatedTaskId = task.id;
-          const copyOfTasksArray = [...tasks];
-          const matchingTaskIndex = copyOfTasksArray.findIndex((t) => t.id === updatedTaskId);
-          copyOfTasksArray[matchingTaskIndex] = task;
-          tasks = copyOfTasksArray;
-          todoDataProvider.refresh(tasks);
-          context.globalState.update(TASKS_STORAGE_KEY, tasks);
-          panel
-            ? ((panel.title = task.title),
-              (panel.webview.html = getWebviewContent(panel.webview, context.extensionUri, task)))
-            : null;
-          break;
+  const showTodoDetail = commands.registerCommand(
+    "simplytodo.showTodoDetail",
+    (todoItem: TodoTreeItem) => {
+      const todoToShow = findtodoById(todos, todoItem.id);
+      if (todoToShow) {
+        todoDetailProvider.refresh(todoToShow);
       }
-    });
+    }
+  );
 
-    panel.onDidDispose(
-      () => {
-        // When the panel is closed, cancel any future updates to the webview content
-        panel = undefined;
-      },
-      null,
-      context.subscriptions
-    );
+  const refreshDetail = commands.registerCommand("simplytodo.refreshDetail", () =>
+    todoDataProvider.refresh(todos)
+  );
+
+  const refreshList = commands.registerCommand("simplytodo.refreshList", () =>
+    todoDataProvider.refresh(todos)
+  );
+
+  const editItem = commands.registerCommand(
+    "simplytodo.editItem",
+    async (todoItem: TodoTreeItem) => {
+      const newLabel = await window.showInputBox({
+        value: todoItem.label?.toString(),
+      });
+
+      const todoToEdit = findtodoById(todos, todoItem.id);
+      if (todoToEdit) {
+        todoToEdit.title = newLabel || todoToEdit.title;
+        todoDataProvider.refresh(todos);
+      }
+    }
+  );
+
+  // Command to create a new todo
+  const createTodo = commands.registerCommand(
+    "simplytodo.createTodo",
+    (parentTodo?: TodoTreeItem) => {
+      const id = uuidv4();
+
+      if (parentTodo === undefined) {
+        const newtodo = new NewTodo(id, todos);
+      } else {
+        const parent = findtodoById(todos, parentTodo.id);
+        const newtodo = new NewTodo(id, todos, parent);
+      }
+
+      todoDataProvider.refresh(todos);
+      context.globalState.update(SIMPLY_TODO_STORAGE_KEY, todos);
+      console.log(context.globalState.get(SIMPLY_TODO_STORAGE_KEY, []));
+      console.log(todos);
+    }
+  );
+
+  // Command to delete a given todo
+  const deleteTodo = commands.registerCommand("simplytodo.deleteTodo", (node: TodoTreeItem) => {
+    const todo = findtodoById(todos, node.id);
+    if (!todo) {
+      return;
+    }
+
+    const parent = findParent(todos, todo.parent ? todo.parent : []);
+    const deleted = deleteTreetodo(todos, todo);
+
+    if (deleted) {
+      if (parent && parent.children.length === 0) {
+        parent.collapsibleState = TreeItemCollapsibleState.None;
+      }
+      todoDataProvider.refresh(todos);
+      context.globalState.update(SIMPLY_TODO_STORAGE_KEY, todos);
+    }
   });
 
-  // Command to create a new task
-  const createBaseTask = commands.registerCommand("simplytodo.createBaseTask", () => {
-    const id = uuidv4();
+  // List Commands
+  context.subscriptions.push(createTodo);
+  context.subscriptions.push(deleteTodo);
+  context.subscriptions.push(refreshList);
+  context.subscriptions.push(showTodoDetail);
+  context.subscriptions.push(editItem);
 
-    const newTask = new NewTask(id, tasks);
-
-    todoDataProvider.refresh(tasks);
-    context.globalState.update(TASKS_STORAGE_KEY, tasks);
-  });
-
-  // Command to create a new task
-  const createTask = commands.registerCommand("simplytodo.createTask", (parentTask: Task) => {
-    const id = uuidv4();
-
-    const newTask = new NewTask(id, tasks, parentTask);
-
-    todoDataProvider.refresh(tasks);
-    context.globalState.update(TASKS_STORAGE_KEY, tasks);
-  });
-
-  // Command to delete a given task
-  const deleteTask = commands.registerCommand("simplytodo.deleteTask", (node: Task) => {
-    const selectedTreeViewItem = node;
-    const selectedTaskIndex = tasks.findIndex((task) => task.id === selectedTreeViewItem.id);
-    tasks.splice(selectedTaskIndex, 1);
-    todoDataProvider.refresh(tasks);
-    context.globalState.update(TASKS_STORAGE_KEY, tasks);
-
-    // Close the panel if it's open
-    panel?.dispose();
-  });
-
-  // Add commands to the extension context
-  context.subscriptions.push(openTask);
-  context.subscriptions.push(createTask);
-  context.subscriptions.push(createBaseTask);
-  context.subscriptions.push(deleteTask);
+  // Details View
+  context.subscriptions.push(refreshDetail);
 }
+
+// This method is called when your extension is deactivated
+export function deactivate() {}

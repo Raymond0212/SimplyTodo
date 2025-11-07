@@ -1,7 +1,7 @@
 {
   "name": "simplytodo",
   "displayName": "SimplyTodo",
-  "description": "A simple todo list to manage your tasks in VSCode",
+  "description": "A simple todo list to manage your todos in VSCode",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.104.0"
@@ -14,23 +14,33 @@
   "contributes": {
     "commands": [
       {
-        "command": "simplytodo.createBaseTask",
-        "title": "Todo: Create a task",
+        "command": "simplytodo.refreshList",
+        "title": "Refresh",
+        "icon": "$(extensions-refresh)"
+      },
+      {
+        "command": "simplytodo.refreshDetail",
+        "title": "Refresh",
+        "icon": "$(extensions-refresh)"
+      },
+      {
+        "command": "simplytodo.createTodo",
+        "title": "Todo: Create a sub Todo",
         "icon": "$(add)"
       },
       {
-        "command": "simplytodo.createTask",
-        "title": "Todo: Create a sub task",
-        "icon": "$(add)"
-      },
-      {
-        "command": "simplytodo.showTaskDetailView",
-        "title": "Todo: Show Task Details"
-      },
-      {
-        "command": "simplytodo.deleteTask",
-        "title": "Todo: Delete task",
+        "command": "simplytodo.deleteTodo",
+        "title": "Todo: Delete Todo",
         "icon": "$(trash)"
+      },
+      {
+        "command": "simplytodo.showTodoDetail",
+        "title": "Todo: Show Todo Detail"
+      },
+      {
+        "command": "simplytodo.editItem",
+        "title": "Todo: Edit Current Item",
+        "icon": "$(edit)"
       }
     ],
     "viewsContainers": {
@@ -46,42 +56,64 @@
       "todo-list-container": [
         {
           "id": "simplytodo.todoListView",
-          "name": "Tasks",
+          "name": "Todos",
           "type": "tree",
-          "visibility": "visible"
+          "visibility": "visible",
+          "icon": "$(tasklist)"
         }
       ]
     },
     "viewsWelcome": [
       {
         "view": "simplytodo.todoListView",
-        "contents": "[Create a task](command:simplytodo.createBaseTask)"
+        "contents": "[Create a Todo](command:simplytodo.createTodo)"
       }
     ],
     "menus": {
       "commandPalette": [
         {
-          "command": "simplytodo.deleteTask",
+          "command": "simplytodo.deleteTodo",
           "when": "false"
         },
         {
-          "command": "simplytodo.createTask",
-          "when": "false"
+          "command": "simplytodo.createTodo"
         }
       ],
       "view/title": [
         {
-          "command": "simplytodo.createBaseTask",
-          "group": "navigation@1"
+          "command": "simplytodo.refreshList",
+          "title": "Refresh",
+          "group": "navigation",
+          "when": "view == simplytodo.todoListView"
+        },
+        {
+          "command": "simplytodo.createTodo",
+          "title": "Todo: Create a Todo",
+          "group": "navigation@1",
+          "when": "view == simplytodo.todoListView"
+        },
+        {
+          "command": "simplytodo.refreshDetail",
+          "title": "Todo: Refresh Detail",
+          "group": "navigation@1",
+          "when": "view == simplytodo.todoDetailView && viewItem == true"
         }
       ],
       "view/item/context": [
         {
-          "command": "simplytodo.createTask",
+          "command": "simplytodo.createTodo",
+          "title": "Todo: Create a Sub Todo",
           "group": "inline"
         },
         {
-          "command": "simplytodo.deleteTask",
+          "command": "simplytodo.deleteTodo",
+          "title": "Todo: Delete Todo",
+          "group": "inline"
+        },
+        {
+          "command": "simplytodo.editItem",
+          "title": "Todo: Edit Item",
+          "icon": "$(edit)",
           "group": "inline"
         }
       ]
@@ -101,6 +133,8 @@
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
     "@types/uuid": "^9.0.8",
     "@types/vscode": "^1.104.0",
     "@typescript-eslint/eslint-plugin": "^8.42.0",
@@ -114,6 +148,9 @@
     "webpack-cli": "^6.0.1"
   },
   "dependencies": {
+    "@vscode-elements/elements": "^2.3.1",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "uuid": "^9.0.0"
   }
 }
