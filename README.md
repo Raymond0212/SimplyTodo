@@ -1,4 +1,4 @@
-# SimplyTodo README
+# SimplyTodo
 
 `SimplyTodo` is a straightforward and easy-to-use todo list manager right inside your Visual Studio Code editor. Keep track of your todos without ever leaving your workspace.
 
@@ -11,10 +11,7 @@ Here are some of the planned features for `SimplyTodo`:
 - **List all todo items**: View all your pending todos.
 - **Mark a todo as complete**: Check off items as you finish them.
 - **Remove a todo item**: Clean up your list by removing todos.
-
-For example:
-
-`!Adding a new todo`
+- **Remove all checked item**: Clean up your list by removing completed todos.
 
 ## Requirements
 
@@ -30,24 +27,8 @@ There are no external requirements or dependencies for this extension.
 
 This extension does not contribute any VS Code settings at the moment.
 
-## Commands
-
-The following commands will be available:
-
-- `simplytodo.addTodo`: Add a new item to your todo list.
-- `simplytodo.listTodos`: Show all current todo items.
-- `simplytodo.completeTodo`: Mark an item as complete.
-
 ## Release Notes
 
 ### 0.0.1
 
 Initial release of SimplyTodo.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-**Enjoy!**
