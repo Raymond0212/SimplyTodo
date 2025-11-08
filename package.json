@@ -2,7 +2,7 @@
   "name": "simplytodo",
   "displayName": "SimplyTodo",
   "description": "A simple todo list to manage your todos in VSCode",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "engines": {
     "vscode": "^1.104.0"
   },
@@ -148,18 +148,21 @@
         {
           "command": "simplytodo.createTodo",
           "title": "Todo: Create a Sub Todo",
-          "group": "inline"
+          "group": "inline",
+          "when": "view == simplytodo.todoListView"
         },
         {
           "command": "simplytodo.deleteTodo",
           "title": "Todo: Delete Todo",
-          "group": "inline"
+          "group": "inline",
+          "when": "view == simplytodo.todoListView"
         },
         {
           "command": "simplytodo.editItem",
           "title": "Todo: Edit Item",
           "icon": "$(edit)",
-          "group": "inline"
+          "group": "inline",
+          "when": "view == simplytodo.todoListView"
         }
       ]
     }

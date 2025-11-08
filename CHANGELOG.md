@@ -15,3 +15,7 @@
 ## [0.0.4] - 2024-06-16
 
 - Update readme sample screenshot.
+
+## [0.0.5] - 2024-06-16
+
+- Fixed an issue where inline actions show in other views.
