@@ -2,7 +2,7 @@
   "name": "simplytodo",
   "displayName": "SimplyTodo",
   "description": "A simple todo list to manage your todos in VSCode",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "engines": {
     "vscode": "^1.104.0"
   },
@@ -14,6 +14,7 @@
   "categories": [
     "Other"
   ],
+  "icon": "./img/SimplyTodo-icon.png",
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {

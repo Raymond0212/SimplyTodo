@@ -2,9 +2,11 @@
 
 `SimplyTodo` is a straightforward and easy-to-use todo list manager right inside your Visual Studio Code editor. Keep track of your todos without ever leaving your workspace.
 
+![SimplelyTodo Screenshot](./img/SimplyTodo-demo.png)
+
 ## Features
 
-Here are some of the planned features for `SimplyTodo`:
+Here are the features for `SimplyTodo`:
 
 - **Display to do in tree hierarchy**: To-do todos and their sub-todoa are in tree hierarchy.
 - **Add a new todo item**: Quickly add a new todo to your list.
@@ -26,9 +28,3 @@ There are no external requirements or dependencies for this extension.
 ## Extension Settings
 
 This extension does not contribute any VS Code settings at the moment.
-
-## Release Notes
-
-### 0.0.1
-
-Initial release of SimplyTodo.
