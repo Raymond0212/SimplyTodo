@@ -2,7 +2,7 @@
   "name": "simplytodo",
   "displayName": "SimplyTodo",
   "description": "A simple todo list to manage your todos in VSCode",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "engines": {
     "vscode": "^1.104.0"
   },

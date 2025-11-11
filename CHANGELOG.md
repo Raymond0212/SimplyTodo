@@ -19,3 +19,7 @@
 ## [0.0.5] - 2024-06-16
 
 - Fixed an issue where inline actions show in other views.
+
+## [0.0.6] - 2024-06-16
+
+- Fixed an issue where unchecked checkbox will not be persisted.

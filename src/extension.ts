@@ -90,7 +90,7 @@ export function activate(context: ExtensionContext) {
     e.items.forEach((item) => {
       const todoTreeItem = item[0];
       const checkboxState = item[1];
-      if (!todoTreeItem || !checkboxState) {
+      if (todoTreeItem === undefined || checkboxState===undefined) {
         return;
       }
       const todo = findtodoById(todos, todoTreeItem.id);
@@ -106,7 +106,7 @@ export function activate(context: ExtensionContext) {
     (todoItem: TodoTreeItem) => {
       const todoToShow = findtodoById(todos, todoItem.id);
       if (todoToShow) {
-        todoDetailProvider.refresh(todoToShow);
+        todoDetailProvider.refresh(todoToShow);``;
       }
     }
   );
